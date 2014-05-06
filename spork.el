@@ -27,6 +27,7 @@
 ;;; Code:
 
 (require 'dash)
+(require 'pcase)
 
 (defun spork-make-shallow-elpa-clone ()
   (let ((name (make-temp-name "/tmp/elpa-clone")))
