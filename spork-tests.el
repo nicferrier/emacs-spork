@@ -1,6 +1,7 @@
 
 
 (require 'spork)
+(require 'fakir)
 
 (ert-deftest spork/buffered-read ()
   (with-temp-buffer
