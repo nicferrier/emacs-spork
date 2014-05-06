@@ -69,6 +69,7 @@ The HOME clones your local packages in a read only way."
 (defun spork/channel-repl (process data)
   (spork/read-and-eval (process-buffer process) data))
 
+;;;###autoload
 (defun spork/bootstrap ()
   (let ((env (getenv "CHANNEL")))
     (when env
@@ -79,11 +80,36 @@ The HOME clones your local packages in a read only way."
                    :service env)))
         (set-process-filter proc 'spork/channel-repl)))))
 
+(defun make/spork-channel ()
+  (let* ((socket-file (concat "/tmp/" (make-temp-name "spork-server")))
+         (myproc (make-network-process
+                  :name socket-file
+                  :family 'local
+                  :server t
+                  :service socket-file)))
+    myproc))
+
+(defun make-spork ()
+  (let ((emacsd (spork-make-emacsd))
+        (spork-channel (make/spork-channel))
+        (saved-HOME (getenv "HOME"))
+        (saved-CHANNEL (getenv "CHANNEL")))
+    (setenv "HOME" emacsd)
+    (setenv "CHANNEL" spork-channel)
+    (unwind-protect
+         (start-process
+          "*spork*"
+          "*spork*"
+          (file-truename (expand-file-name invocation-name invocation-directory))
+          "-batch" "-e" "(while t (sleep-for 10))")
+      (setenv "HOME" saved-HOME)
+      (getenv "CHANNEL" saved-CHANNEL))))
+
+
+;;;###autoload
 (eval-after-load 'spork
   '(spork/bootstrap))
 
-
 (provide 'spork)
-
 
 ;;; spork.el ends here
